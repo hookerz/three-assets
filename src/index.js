@@ -29,19 +29,28 @@ export default function Assets() {
   /**
    * Load an asset.
 
-   * @param {String} key -
+   * @param key -
    */
   obj.load = function(key, url, loaderclass) {
 
-    // Support argument-style parameters.
-    if (arguments.length === 1) {
+    if (arguments.length === 1 && Array.isArray(arguments[0])) {
 
+      const manifest = arguments[0];
+
+      debug(`loading ${ manifest.length } assets`);
+
+      return Promise.all(manifest.map(descriptor => obj.load(descriptor)));
+
+    } else if (arguments.length === 1) {
+
+      // Support asset descriptors.
       key         = arguments[0].key;
       url         = arguments[0].url;
       loaderclass = arguments[0].loader;
 
     } else if (arguments.length === 2) {
 
+      // The asset key is optional.
       key         = null;
       url         = arguments[0];
       loaderclass = arguments[1];

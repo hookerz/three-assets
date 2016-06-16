@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import test from 'blue-tape';
+import test from 'tape';
+import asynctest from 'blue-tape';
 import Assets from '../src';
 
 // Create a loader shim that kinda acts like the three.js loaders. The three.js
@@ -19,53 +20,90 @@ TestJSONLoader.prototype.load = function(url, onLoad, onProgress, onError) {
 
 }
 
-test('load named assets', function(assert) {
+asynctest('load named assets', function(assert) {
 
   const assets = Assets();
 
-  const verify = function(asset) {
+  return assets.load('test', './fixtures/test.json', TestJSONLoader).then(asset => {
 
     assert.true(asset.foobar);
     assert.same(asset, assets.get('test'));
 
-  };
-
-  return assets.load('test', './fixtures/test.json', TestJSONLoader).then(verify);
+  });
 
 });
 
-test('load unnamed assets', function(assert) {
+asynctest('load unnamed assets', function(assert) {
 
   const assets = Assets();
 
-  const verify = function(asset) {
+  return assets.load('./fixtures/test.json', TestJSONLoader).then(asset => {
 
     assert.true(asset.foobar);
     assert.same(asset, assets.get('./fixtures/test.json'));
 
-  };
-
-  return assets.load('./fixtures/test.json', TestJSONLoader).then(verify);
+  });
 
 });
 
-test('load asset object', function(assert) {
+asynctest('load asset object', function(assert) {
 
   const assets = Assets();
 
-  const verify = function(asset) {
-
-    assert.true(asset.foobar);
-    assert.same(asset, assets.get('test'));
-
-  };
-
-  return assets.load({
+  const descrip = {
 
     key: 'test',
     url: './fixtures/test.json',
     loader: TestJSONLoader
 
-  }).then(verify);
+  };
+
+  return assets.load(descrip).then(asset => {
+
+    assert.true(asset.foobar);
+    assert.same(asset, assets.get('test'));
+
+  });
+
+});
+
+asynctest('load asset manifest', function(assert) {
+
+  const assets = Assets();
+
+  const manifest = [
+
+    {
+      key: 'testA',
+      url: './fixtures/test.json',
+      loader: TestJSONLoader
+    },
+    {
+      key: 'testB',
+      url: './fixtures/test.json',
+      loader: TestJSONLoader
+    }
+
+  ];
+
+  return assets.load(manifest).then(list => {
+
+    assert.same(list[0], assets.get('testA'));
+    assert.same(list[1], assets.get('testB'));
+
+  });
+
+});
+
+test('reuse pending requests', function(assert) {
+
+  const assets = Assets();
+
+  const requestA = assets.load('testA', './fixtures/test.json', TestJSONLoader);
+  const requestB = assets.load('testB', './fixtures/test.json', TestJSONLoader);
+
+  assert.equal(requestA, requestB);
+
+  assert.end();
 
 });
