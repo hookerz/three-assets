@@ -1,36 +1,41 @@
 {
   "name": "three-assets",
+  "license": "MIT",
   "version": "0.1.0",
   "description": "an asset loader for three.js",
-  "main": "index.js",
+  "homepage": "https://github.com/hookerz/three-assets#readme",
+  "author": "Chris Parker <parker@byhook.com>",
+  "main": "out/index.js",
+  "jsnext:main": "src/index.js",
   "scripts": {
-    "build": "babel src --out-dir out",
-    "test": "babel-node test/index.js | faucet",
+    "build": "rollup -c",
+    "test": "node test/index.js | faucet",
     "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hookerz/three-assets.git"
   },
+  "bugs": {
+    "url": "https://github.com/hookerz/three-assets/issues"
+  },
   "keywords": [
     "three",
     "asset",
     "loader"
   ],
-  "author": "Chris Parker <parker@byhook.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/hookerz/three-assets/issues"
-  },
-  "homepage": "https://github.com/hookerz/three-assets#readme",
   "dependencies": {
-    "debug": "^2.2.0"
+    "debug": "^2.6.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.10.1",
-    "babel-preset-es2015": "^6.9.0",
-    "blue-tape": "^0.2.0",
+    "blue-tape": "^1.0.0",
     "faucet": "^0.0.1",
+    "reify": "^0.4.4",
+    "rollup": "^0.41.4",
+    "rollup-plugin-buble": "^0.15.0",
     "tape": "^4.5.1"
+  },
+  "peerDependencies": {
+    "three": ">= 0.83.0"
   }
 }

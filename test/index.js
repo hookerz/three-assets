@@ -1,8 +1,10 @@
+require('reify');
+
 import fs from 'fs';
 import path from 'path';
 import test from 'tape';
 import asynctest from 'blue-tape';
-import Assets from '../src';
+import * as assets from '../src';
 
 // Create a loader shim that kinda acts like the three.js loaders. The three.js
 // loaders rely on XMLHttpRequest which isn't available in node. The most
@@ -11,18 +13,16 @@ import Assets from '../src';
 
 function TestJSONLoader() {}
 
-TestJSONLoader.prototype.load = function(url, onLoad, onProgress, onError) {
+TestJSONLoader.prototype.load = function (url, onLoad, onProgress, onError) {
 
   const filepath = path.resolve(__dirname, url);
   const callback = (err, data) => err ? onError(err) : onLoad(JSON.parse(data));
 
   fs.readFile(filepath, { encoding: 'utf8' }, callback);
 
-}
+};
 
-asynctest('load named assets', function(assert) {
-
-  const assets = Assets();
+asynctest('load named assets', assert => {
 
   return assets.load('test', './fixtures/test.json', TestJSONLoader).then(asset => {
 
@@ -33,7 +33,7 @@ asynctest('load named assets', function(assert) {
 
 });
 
-asynctest('load unnamed assets', function(assert) {
+asynctest('load unnamed assets', assert => {
 
   const assets = Assets();
 
@@ -46,7 +46,7 @@ asynctest('load unnamed assets', function(assert) {
 
 });
 
-asynctest('load asset object', function(assert) {
+asynctest('load asset object', assert => {
 
   const assets = Assets();
 
@@ -67,7 +67,7 @@ asynctest('load asset object', function(assert) {
 
 });
 
-asynctest('load asset manifest', function(assert) {
+asynctest('load asset manifest', assert => {
 
   const assets = Assets();
 
@@ -95,7 +95,7 @@ asynctest('load asset manifest', function(assert) {
 
 });
 
-test('reuse pending requests', function(assert) {
+test('reuse pending requests', assert => {
 
   const assets = Assets();
 

@@ -1,12 +1,12 @@
 import Debug from 'debug';
+import { EventDispatcher, LoadingManager } from 'three';
 
 const debug = Debug('three-assets');
-
-const identity = function() {};
+const noop  = function() {};
 
 export default function Assets() {
 
-  const obj = {};
+  const assets = new EventDispatcher();
 
   // A map of three.js loader classes to loader instances. It seems like we
   // only need one instance of each implementation so we just cache them.
@@ -26,33 +26,38 @@ export default function Assets() {
   // intended for synchronous access.
   const assets = {};
 
+  const manager = new LoadingManager(undefined, onProgress, undefined);
+
   /**
    * Load an asset.
 
-   * @param key -
+   * @param key - The unique key used to identify the asset.
+   * @param url - The URL of the asset.
+   * @param loaderclass - A three.js loader.
    */
-  obj.load = function(key, url, loaderclass) {
+  obj.add = function (key, url, loaderclass) {
 
-    if (arguments.length === 1 && Array.isArray(arguments[0])) {
+    if (arguments.length === 1 && Array.isArray(arguments[0]) === true) {
 
       const manifest = arguments[0];
+      const promises = manifest.map(descriptor => obj.load(descriptor));
 
-      debug(`loading ${ manifest.length } assets`);
+      debug(`loading ${ promises.length } assets`);
 
-      return Promise.all(manifest.map(descriptor => obj.load(descriptor)));
+      return Promise.all(promises);
 
     } else if (arguments.length === 1) {
 
       // Support asset descriptors.
-      key         = arguments[0].key;
-      url         = arguments[0].url;
+      key = arguments[0].key;
+      url = arguments[0].url;
       loaderclass = arguments[0].loader;
 
     } else if (arguments.length === 2) {
 
       // The asset key is optional.
-      key         = null;
-      url         = arguments[0];
+      key = null;
+      url = arguments[0];
       loaderclass = arguments[1];
 
     }
@@ -65,7 +70,7 @@ export default function Assets() {
 
     if (loaderclass === undefined) {
 
-      throw new Error(`three-assets needs a three.js loader class to load and parse the asset at <${ url }>`);
+      throw new Error(`three-assets needs a three.js loader class to load and parse the asset at "${ url }"`);
 
     }
 
@@ -86,36 +91,34 @@ export default function Assets() {
     // Reuse a pending or previous request to the same URL.
     requests[url] = requests[url] || new Promise(function(resolve, reject) {
 
-      const onLoad = function(asset) {
+      function onLoad(asset) {
 
         debug(`loaded "${ url }"`);
-
-        // Cache the resolved asset for direct access in Assets#get.
         assets[url] = asset;
-
         resolve(asset);
 
-      };
+      }
 
-      const onError = function(err) {
+      function onError(err) {
 
         debug(`error while loading "${ url }" : ${ err.reason || err.message || err }`);
-
         reject(err);
 
-      };
+      }
 
-      loader.load(url, onLoad, identity, onError);
+      loader.load(url, onLoad, noop, onError);
 
     });
 
     return requests[url];
 
-  }
+  };
 
   /**
    * Access an asset.
    *
+   * @param {String} key - The unique key used to identify the asset.
+   * @returns {*} The asset.
    */
   obj.get = function(key) {
 
@@ -132,7 +135,7 @@ export default function Assets() {
 
     }
 
-  }
+  };
 
   return obj;
 
